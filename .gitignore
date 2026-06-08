@@ -1,1 +1,13 @@
-supabase-config.js
+# Supabase
+js/supabase-config.js
+
+# Environment files
+.env
+.env.local
+
+# Dependencies
+node_modules
+
+# Build output
+dist
+build
