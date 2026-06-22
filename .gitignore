@@ -1,13 +1,13 @@
-# Supabase
-js/supabase-config.js
-
-# Environment files
+# Environment variables
 .env
 .env.local
+.env.*.local
 
-# Dependencies
-node_modules
+# Node modules
+node_modules/
+dist/
+build/
 
-# Build output
-dist
-build
+# System files
+.DS_Store
+Thumbs.db
