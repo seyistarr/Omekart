@@ -1,93 +1,43 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server' // This is now read-only
 import Link from 'next/link'
 
-const supabase = createClient()
+export default async function HomePage() {
+  const supabase = await createClient()
 
-export default function ShopHomePage() {
-  const router = useRouter()
-  const [user, setUser] = useState<any>(null)
-  const [products, setProducts] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: products, error } = await supabase
+    .from('catalog_items')
+    .select('id, name, price, images, status')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+    .limit(20)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        router.push('/login')
-        return
-      }
-      setUser(session.user)
-
-      // Fetch products
-      const { data } = await supabase
-        .from('catalog_items')
-        .select('id, name, price, images, product_type')
-        .eq('status', 'published')
-        .limit(10)
-
-      setProducts(data || [])
-      setLoading(false)
-    }
-
-    fetchData()
-  }, [router])
-
-  if (!user || loading) {
-    return <div className="min-h-screen flex items-center justify-center text-gray-500">Loading...</div>
+  if (error) {
+    console.error('Error loading products:', error)
+    return <div className="p-4">Failed to load products. Please try again later.</div>
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
-      <div className="bg-white px-5 pt-5 pb-4 shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Hi, {user.email?.split('@')[0] || 'User'}
-        </h1>
-        <p className="text-gray-500 text-sm">What would you like to buy today?</p>
-      </div>
-
-      {/* Search */}
-      <div className="px-5 mt-4">
-        <div className="bg-white rounded-xl shadow-card px-4 py-3 flex items-center gap-3">
-          <span className="text-gray-400">🔍</span>
-          <input
-            type="text"
-            placeholder="Search products, foods, or services"
-            className="flex-1 outline-none text-sm"
-          />
-        </div>
-      </div>
-
-      {/* Products */}
-      <div className="px-5 mt-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">Recommended for You</h2>
-        {products.length === 0 ? (
-          <div className="text-gray-400 text-sm">No products available</div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {products.map((item) => (
-              <Link
-                key={item.id}
-                href={`/shop/product/${item.id}`}
-                className="bg-white rounded-xl shadow-card overflow-hidden hover:shadow-lg transition"
-              >
-                <img
-                  src={item.images?.[0] || '/placeholder.png'}
-                  alt={item.name}
-                  className="w-full h-40 object-cover"
-                />
-                <div className="p-3">
-                  <h3 className="font-semibold text-sm line-clamp-1">{item.name}</h3>
-                  <p className="text-primary font-bold text-sm mt-1">₦{item.price.toLocaleString()}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6">Explore Products</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {products?.length === 0 && (
+          <p className="col-span-full text-gray-500">No products available yet.</p>
         )}
+        {products?.map((product) => (
+          <Link key={product.id} href={`/product/${product.id}`}>
+            <div className="border rounded p-4 hover:shadow-lg transition">
+              <div className="h-40 bg-gray-100 rounded mb-2 flex items-center justify-center">
+                {product.images?.[0] ? (
+                  <img src={product.images[0]} alt={product.name} className="object-cover h-full w-full" />
+                ) : (
+                  <span className="text-gray-400">No image</span>
+                )}
+              </div>
+              <h2 className="font-semibold">{product.name}</h2>
+              <p className="text-lg font-bold">₦{product.price}</p>
+            </div>
+          </Link>
+        ))}
       </div>
     </div>
   )

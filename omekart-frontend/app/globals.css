@@ -1,6 +1,10 @@
-@import "tailwindcss";
+/* 1. Google Fonts MUST load first, before any other assets */
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
+/* 2. Tailwind's own imports come next */
+@import "tailwindcss";
+
+/* 3. Your design tokens */
 @theme {
   --color-primary: #6B3FF6;
   --color-primary-dark: #5530CC;
@@ -26,20 +30,32 @@
   --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
+/* 4. Global reset with border-box (prevents width/height miscalculations) */
 * {
+  box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
-  background: var(--color-bg);
-  color: var(--color-ink);
-  font-family: var(--font-body);
+/* 5. Base element styles go inside @layer base (Tailwind v4 best practice) */
+@layer base {
+  html,
+  body {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+  }
 }
 
-h1, h2, h3, .font-display {
-  font-family: var(--font-display);
-}
-
+/* 6. Utility classes and custom effects */
 .border-hairline {
   border-color: var(--color-border);
 }
@@ -66,41 +82,66 @@ h1, h2, h3, .font-display {
   background-size: 20px 20px;
 }
 
+/* 7. Animations */
 @keyframes float-slow {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
 .animate-float {
   animation: float-slow 6s ease-in-out infinite;
 }
+
 .animate-float-delay {
   animation: float-slow 6s ease-in-out infinite;
   animation-delay: 1.2s;
 }
 
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 .animate-fade-up {
   animation: fade-up 0.5s ease-out both;
 }
 
-@keyframes dash-flow {
-  to { stroke-dashoffset: -24; }
-}
 .path-flow {
   stroke-dasharray: 4 6;
   animation: dash-flow 1.4s linear infinite;
 }
 
+/* 8. Accessibility: respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  .animate-float, .animate-float-delay, .animate-fade-up, .path-flow {
+  .animate-float,
+  .animate-float-delay,
+  .animate-fade-up,
+  .path-flow {
     animation: none;
   }
 }
 
-input:focus-visible, button:focus-visible, a:focus-visible {
+/* 9. Focus states for keyboard navigation */
+input:focus-visible,
+button:focus-visible,
+a:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }

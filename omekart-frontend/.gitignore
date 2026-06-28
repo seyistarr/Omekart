@@ -1,8 +1,12 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ============================================
+# Omekart .gitignore
+# ============================================
 
-# dependencies
-/node_modules
-/.pnp
+# ==========================
+# Dependencies
+# ==========================
+node_modules/
+.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -10,32 +14,106 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# ==========================
+# Next.js
+# ==========================
+.next/
+out/
+build/
 
-# next.js
-/.next/
-/out/
+# ==========================
+# Production Builds
+# ==========================
+dist/
+coverage/
 
-# production
-/build
+# ==========================
+# Environment Variables
+# ==========================
+.env
+.env.*
+.env.local
+.env.local.bak
+.env.development
+.env.production
+.env.test
 
-# misc
-.DS_Store
-*.pem
+# ==========================
+# Supabase Local Development
+# ==========================
+.supabase/
+supabase/.temp/
 
-# debug
+# ==========================
+# Vercel
+# ==========================
+.vercel/
+
+# ==========================
+# Logs
+# ==========================
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
+# ==========================
+# TypeScript
+# ==========================
 *.tsbuildinfo
 next-env.d.ts
+
+# ==========================
+# Operating System
+# ==========================
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ==========================
+# IDEs
+# ==========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ==========================
+# Certificates & Keys
+# ==========================
+*.pem
+*.key
+*.crt
+*.p12
+
+# ==========================
+# Temporary Files
+# ==========================
+tmp/
+temp/
+.cache/
+*.tmp
+
+# ==========================
+# Archives & Backups
+# ==========================
+*.zip
+*.tar
+*.gz
+*.7z
+*.bak
+*.old
+
+# ==========================
+# Local SQLite Databases
+# ==========================
+*.sqlite
+*.sqlite3
+*.db
+
+# ==========================
+# Miscellaneous
+# ==========================
+.eslintcache

@@ -1,10 +1,5 @@
-import type { Metadata } from 'next'
+import { OnboardingGuard } from '@/components/shared/OnboardingGuard'
 import './globals.css'
-
-export const metadata: Metadata = {
-  title: 'Omekart',
-  description: 'Shop. Eat. Book.',
-}
 
 export default function RootLayout({
   children,
@@ -13,7 +8,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <OnboardingGuard>
+          {children}
+        </OnboardingGuard>
+      </body>
     </html>
   )
 }

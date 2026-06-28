@@ -2,6 +2,7 @@
 .env
 .env.local
 .env.*.local
+omekart-backup/
 
 # Node modules
 node_modules/
