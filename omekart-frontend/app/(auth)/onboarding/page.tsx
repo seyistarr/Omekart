@@ -6,6 +6,7 @@ import SplashScreen from '@/components/onboarding/SplashScreen';
 import WelcomeScreen from '@/components/onboarding/WelcomeScreen';
 import CreateAccountScreen from '@/components/onboarding/CreateAccountScreen';
 import LoginScreen from '@/components/onboarding/LoginScreen';
+import ForgetPasswordScreen from '@/components/onboarding/ForgetPasswordScreen'; // <-- import
 import HubsScreen from '@/components/onboarding/HubsScreen';
 import ProfileScreen from '@/components/onboarding/ProfileScreen';
 import VerifiedScreen from '@/components/onboarding/VerifiedScreen';
@@ -22,6 +23,7 @@ function ActiveScreen() {
     case 'welcome': return <WelcomeScreen />;
     case 'create-account': return <CreateAccountScreen />;
     case 'login': return <LoginScreen />;
+    case 'forgot-password': return <ForgetPasswordScreen />; // <-- new case
     case 'hubs': return <HubsScreen />;
     case 'profile': return <ProfileScreen />;
     case 'verified': return <VerifiedScreen />;

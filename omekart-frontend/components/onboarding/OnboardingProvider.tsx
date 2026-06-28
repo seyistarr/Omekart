@@ -15,6 +15,7 @@ export type OnboardingStep =
   | 'welcome'
   | 'create-account'
   | 'login'
+  | 'forgot-password'          // <-- ADDED
   | 'hubs'
   | 'profile'
   | 'verified'

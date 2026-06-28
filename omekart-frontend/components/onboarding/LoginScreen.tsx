@@ -90,9 +90,13 @@ export default function LoginScreen() {
               <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                 Password
               </label>
-              <a href="/forgot-password" className="text-xs font-bold text-violet-600 hover:underline">
+              <button
+                type="button"
+                onClick={() => navigateTo('forgot-password')}
+                className="text-xs font-bold text-violet-600 hover:underline"
+              >
                 Forgot Password?
-              </a>
+              </button>
             </div>
             <div className="relative rounded-xl border border-slate-200 bg-white shadow-2xl shadow-slate-100/10 focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-500/10 transition-all duration-150">
               <span className="absolute inset-y-0 left-3 flex items-center text-slate-400 pointer-events-none">

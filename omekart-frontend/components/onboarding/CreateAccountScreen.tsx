@@ -83,7 +83,7 @@ export default function CreateAccountScreen() {
                 required
                 value={signup.fullName}
                 onChange={(e) => setSignup({ fullName: e.target.value })}
-                placeholder="John Doe"
+                placeholder="Archangelstr"
                 className="w-full pl-9 pr-4 py-2 bg-transparent focus:outline-none text-sm font-medium text-slate-800 placeholder-slate-300"
               />
             </div>
@@ -129,7 +129,7 @@ export default function CreateAccountScreen() {
                 required
                 value={signup.email}
                 onChange={(e) => setSignup({ email: e.target.value })}
-                placeholder="you@company.com"
+                placeholder="your@email.com"
                 className="w-full pl-9 pr-4 py-2 bg-transparent focus:outline-none text-sm font-medium text-slate-800 placeholder-slate-300"
               />
             </div>
