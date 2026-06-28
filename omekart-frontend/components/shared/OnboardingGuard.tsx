@@ -11,42 +11,58 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
+    let active = true
+
     const checkOnboarding = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!session) {
-        setLoading(false)
-        return
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+        if (sessionError) {
+          console.error('Error checking Supabase session:', sessionError)
+          return
+        }
+
+        if (!session) {
+          return
+        }
+
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('default_address')
+          .eq('user_id', session.user.id)
+          .maybeSingle()
+
+        if (profileError) {
+          console.error('Error loading profile:', profileError)
+        }
+
+        const hasDefaultAddress = !!profile?.default_address
+
+        const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/signup')
+        const isCallbackRoute = pathname.startsWith('/auth/callback')
+        const isOnboardingRoute = pathname.startsWith('/onboarding')
+
+        if (!hasDefaultAddress && !isAuthRoute && !isCallbackRoute && !isOnboardingRoute) {
+          router.push('/onboarding')
+        }
+
+        if (hasDefaultAddress && isOnboardingRoute) {
+          router.push('/home')
+        }
+      } catch (error) {
+        console.error('Onboarding guard error:', error)
+      } finally {
+        if (active) {
+          setLoading(false)
+        }
       }
-
-      // Check if user has a default address
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('default_address')
-        .eq('user_id', session.user.id)
-        .maybeSingle()
-
-      const hasDefaultAddress = !!profile?.default_address
-
-      // Redirect logic (only on protected pages)
-      const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/signup')
-      const isCallbackRoute = pathname.startsWith('/auth/callback')
-      const isOnboardingRoute = pathname.startsWith('/onboarding')
-
-      // If no address and not on auth/callback/onboarding, redirect to onboarding
-      if (!hasDefaultAddress && !isAuthRoute && !isCallbackRoute && !isOnboardingRoute) {
-        router.push('/onboarding')
-      }
-
-      // If has address and on onboarding, redirect to home
-      if (hasDefaultAddress && isOnboardingRoute) {
-        router.push('/home')
-      }
-
-      setLoading(false)
     }
 
     checkOnboarding()
+
+    return () => {
+      active = false
+    }
   }, [pathname, router, supabase])
 
   if (loading) {
