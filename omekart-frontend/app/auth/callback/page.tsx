@@ -1,10 +1,20 @@
 'use client'
 
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-export default function AuthCallbackPage() {
+function CallbackLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-700">
+      <div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
+        Processing your sign-in...
+      </div>
+    </div>
+  )
+}
+
+function AuthCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -58,11 +68,13 @@ export default function AuthCallbackPage() {
     handleCallback()
   }, [router, searchParams])
 
+  return <CallbackLoading />
+}
+
+export default function AuthCallbackPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-700">
-      <div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
-        Processing your sign-in…
-      </div>
-    </div>
+    <Suspense fallback={<CallbackLoading />}>
+      <AuthCallbackContent />
+    </Suspense>
   )
 }

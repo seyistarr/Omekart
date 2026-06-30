@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import 'leaflet/dist/leaflet.css';
+import { LocationDataProvider } from '@/components/onboarding/LocationDataProvider';
 import { OnboardingProvider, useOnboarding } from '@/components/onboarding/OnboardingProvider';
 import SplashScreen from '@/components/onboarding/SplashScreen';
 import WelcomeScreen from '@/components/onboarding/WelcomeScreen';
@@ -57,9 +58,11 @@ function OnboardingShell() {
 export default function OnboardingPage() {
   return (
     <div className="bg-slate-50 min-h-screen flex flex-col items-center justify-center antialiased overflow-x-hidden">
-      <OnboardingProvider>
-        <OnboardingShell />
-      </OnboardingProvider>
+      <LocationDataProvider>
+        <OnboardingProvider>
+          <OnboardingShell />
+        </OnboardingProvider>
+      </LocationDataProvider>
     </div>
   );
 }

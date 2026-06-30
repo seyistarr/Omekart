@@ -2,24 +2,35 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { COUNTRY_CODES, CountryCode } from '@/lib/onboarding/countryCodes';
+import {
+  Country,
+  countryFlagFromIso,
+  normalizePhoneCode,
+  useCountries,
+} from '@/components/onboarding/LocationDataProvider';
 
 interface CountryCodeModalProps {
   open: boolean;
   onClose: () => void;
-  onSelect: (country: CountryCode) => void;
+  onSelect: (country: Country) => void;
 }
 
 export default function CountryCodeModal({ open, onClose, onSelect }: CountryCodeModalProps) {
   const [query, setQuery] = useState('');
+  const { countries, countriesLoading, countriesError, refreshCountries } = useCountries();
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
-    if (!q) return COUNTRY_CODES;
-    return COUNTRY_CODES.filter(
-      (c) => c.commonName.toLowerCase().includes(q) || c.dialString.includes(q)
-    );
-  }, [query]);
+    if (!q) return countries;
+    return countries.filter((country) => {
+      const phoneCode = normalizePhoneCode(country.phone_code);
+      return (
+        country.name.toLowerCase().includes(q) ||
+        country.iso_code.toLowerCase().includes(q) ||
+        phoneCode.includes(q)
+      );
+    });
+  }, [countries, query]);
 
   if (!open) return null;
 
@@ -57,21 +68,34 @@ export default function CountryCodeModal({ open, onClose, onSelect }: CountryCod
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-2 space-y-0.5 max-h-[50vh]">
-          {filtered.length === 0 ? (
+          {countriesLoading ? (
+            <div className="text-center py-6 text-xs text-slate-400 font-medium">Loading countries...</div>
+          ) : countriesError ? (
+            <div className="text-center py-6 px-4 space-y-3">
+              <p className="text-xs text-red-500 font-medium">{countriesError}</p>
+              <button
+                type="button"
+                onClick={refreshCountries}
+                className="px-4 py-2 rounded-lg bg-violet-600 text-white text-xs font-bold hover:bg-violet-700 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="text-center py-6 text-xs text-slate-300 font-medium">No countries found</div>
           ) : (
             filtered.map((country) => (
               <button
-                key={country.dialString + country.commonName}
+                key={country.id}
                 type="button"
                 onClick={() => onSelect(country)}
                 className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-slate-50 active:bg-slate-100 rounded-lg transition-colors text-left text-xs text-slate-700 font-medium group"
               >
                 <div className="flex items-center space-x-3 truncate">
-                  <span className="text-base leading-none">{country.flagIcon || '🏳️'}</span>
-                  <span className="truncate font-semibold text-slate-800">{country.commonName}</span>
+                  <span className="text-base leading-none">{countryFlagFromIso(country.iso_code) || country.iso_code}</span>
+                  <span className="truncate font-semibold text-slate-800">{country.name}</span>
                 </div>
-                <span className="text-violet-600 font-bold tracking-wide">{country.dialString}</span>
+                <span className="text-violet-600 font-bold tracking-wide">{normalizePhoneCode(country.phone_code)}</span>
               </button>
             ))
           )}

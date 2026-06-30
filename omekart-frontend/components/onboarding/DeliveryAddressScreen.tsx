@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Map as LeafletMap, CircleMarker } from 'leaflet';
 import { useOnboarding } from './OnboardingProvider';
+import { useAdministrativeRegions, useCities, useCountries } from './LocationDataProvider';
 import { DEFAULT_LAT_LNG } from '@/lib/onboarding/onboardingData';
 import 'leaflet/dist/leaflet.css';
 
@@ -18,6 +19,9 @@ interface PhotonFeature {
 
 export default function DeliveryAddressScreen() {
   const { navigateTo, address, setAddress } = useOnboarding();
+  const { countries, countriesLoading, countriesError } = useCountries();
+  const { regions, loading: regionsLoading, error: regionsError } = useAdministrativeRegions(address.countryId);
+  const { cities, loading: citiesLoading, error: citiesError } = useCities(address.regionId);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const markerRef = useRef<CircleMarker | null>(null);
@@ -28,6 +32,13 @@ export default function DeliveryAddressScreen() {
   const [suggestions, setSuggestions] = useState<PhotonFeature[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [mapReady, setMapReady] = useState(false);
+
+  useEffect(() => {
+    if (!address.countryId && countries.length === 1) {
+      const [country] = countries;
+      setAddress({ countryId: country.id, country: country.name });
+    }
+  }, [address.countryId, countries, setAddress]);
 
   // Initialize Leaflet on mount (client-only)
   useEffect(() => {
@@ -77,7 +88,7 @@ export default function DeliveryAddressScreen() {
     debounceRef.current = setTimeout(async () => {
       try {
         const res = await fetch(
-          `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&bbox=2.6,4.2,14.6,13.9`
+          `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`
         );
         const payload = await res.json();
         setSuggestions(payload.features || []);
@@ -91,7 +102,7 @@ export default function DeliveryAddressScreen() {
   function selectSuggestion(feature: PhotonFeature) {
     const props = feature.properties;
     const label = [props.name, props.street, props.city || props.state].filter(Boolean).join(', ');
-    const city = props.city || props.state || 'Lagos';
+    const city = props.city || props.state || '';
     const [lon, lat] = feature.geometry.coordinates;
 
     setStreetInput(label);
@@ -113,7 +124,7 @@ export default function DeliveryAddressScreen() {
   }
 
   function handleVerify() {
-    if (!streetInput.trim() || !cityInput.trim()) {
+    if (!address.countryId || !streetInput.trim() || !cityInput.trim()) {
       alert('Validation Constraint: Please input your address configuration details.');
       return;
     }
@@ -187,29 +198,102 @@ export default function DeliveryAddressScreen() {
             )}
           </div>
 
+          <div>
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+              Country
+            </label>
+            <select
+              value={address.countryId}
+              disabled={countriesLoading}
+              onChange={(e) => {
+                const country = countries.find((item) => item.id === e.target.value);
+                setAddress({
+                  countryId: country?.id ?? '',
+                  country: country?.name ?? '',
+                  regionId: '',
+                  region: '',
+                  cityId: '',
+                  city: '',
+                });
+                setCityInput('');
+              }}
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-violet-500 focus:bg-white transition-all text-slate-800 font-medium disabled:opacity-60"
+            >
+              <option value="">{countriesLoading ? 'Loading countries...' : 'Select country'}</option>
+              {countries.map((country) => (
+                <option key={country.id} value={country.id}>
+                  {country.name}
+                </option>
+              ))}
+            </select>
+            {countriesError && <p className="text-xs text-red-500 mt-1">{countriesError}</p>}
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                City / State
+                State / Region
               </label>
-              <input
-                type="text"
-                value={cityInput}
-                onChange={(e) => setCityInput(e.target.value)}
-                placeholder="City layer"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-violet-500 focus:bg-white transition-all text-slate-800 font-medium"
-              />
+              <select
+                value={address.regionId}
+                disabled={!address.countryId || regionsLoading}
+                onChange={(e) => {
+                  const region = regions.find((item) => item.id === e.target.value);
+                  setAddress({
+                    regionId: region?.id ?? '',
+                    region: region?.name ?? '',
+                    cityId: '',
+                    city: '',
+                  });
+                  setCityInput('');
+                }}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-violet-500 focus:bg-white transition-all text-slate-800 font-medium disabled:opacity-60"
+              >
+                <option value="">{regionsLoading ? 'Loading...' : 'Select region'}</option>
+                {regions.map((region) => (
+                  <option key={region.id} value={region.id}>
+                    {region.name}
+                  </option>
+                ))}
+              </select>
+              {regionsError && <p className="text-xs text-red-500 mt-1">{regionsError}</p>}
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-400 tracking-wider uppercase mb-1.5">
-                Country
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                City
               </label>
-              <input
-                type="text"
-                value={address.country}
-                readOnly
-                className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-500 font-semibold cursor-not-allowed"
-              />
+              {cities.length > 0 ? (
+                <select
+                  value={address.cityId}
+                  disabled={!address.regionId || citiesLoading}
+                  onChange={(e) => {
+                    const city = cities.find((item) => item.id === e.target.value);
+                    setAddress({ cityId: city?.id ?? '', city: city?.name ?? '' });
+                    setCityInput(city?.name ?? '');
+                  }}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-violet-500 focus:bg-white transition-all text-slate-800 font-medium disabled:opacity-60"
+                >
+                  <option value="">{citiesLoading ? 'Loading...' : 'Select city'}</option>
+                  {cities.map((city) => (
+                    <option key={city.id} value={city.id}>
+                      {city.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={cityInput}
+                  onChange={(e) => {
+                    setCityInput(e.target.value);
+                    setAddress({ city: e.target.value, cityId: '' });
+                  }}
+                  placeholder={citiesLoading ? 'Loading...' : 'City'}
+                  disabled={!address.countryId || citiesLoading}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-violet-500 focus:bg-white transition-all text-slate-800 font-medium disabled:opacity-60"
+                />
+              )}
+              {citiesError && <p className="text-xs text-red-500 mt-1">{citiesError}</p>}
             </div>
           </div>
         </div>

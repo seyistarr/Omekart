@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { useOnboarding } from './OnboardingProvider';
 import CountryCodeModal from './CountryCodeModal';
 import { createClient } from '@/lib/supabase/client';
+import { countryFlagFromIso, normalizePhoneCode, useCountries } from './LocationDataProvider';
 
 export default function CreateAccountScreen() {
   const { navigateTo, signup, setSignup, setUserId } = useOnboarding();
+  const { countriesLoading } = useCountries();
   const [countryModalOpen, setCountryModalOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -20,6 +22,10 @@ export default function CreateAccountScreen() {
     e.preventDefault();
     if (signup.password !== signup.confirmPassword) {
       setMatchError(true);
+      return;
+    }
+    if (!signup.countryCode) {
+      alert('Please select your country code.');
       return;
     }
     setMatchError(false);
@@ -99,8 +105,8 @@ export default function CreateAccountScreen() {
                 onClick={() => setCountryModalOpen(true)}
                 className="col-span-4 border-r border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors flex items-center justify-between px-3 text-sm font-medium text-slate-700 h-full min-h-[38px]"
               >
-                <span>{signup.countryFlag}</span>
-                <span className="tracking-wide ml-1">{signup.countryCode}</span>
+                <span>{signup.countryFlag || <i className="fas fa-globe text-slate-400" />}</span>
+                <span className="tracking-wide ml-1">{countriesLoading ? '...' : signup.countryCode || 'Code'}</span>
                 <i className="fas fa-chevron-down text-[8px] text-slate-400 ml-1" />
               </button>
               <div className="col-span-8 relative">
@@ -254,7 +260,14 @@ export default function CreateAccountScreen() {
         open={countryModalOpen}
         onClose={() => setCountryModalOpen(false)}
         onSelect={(country) => {
-          setSignup({ countryCode: country.dialString, countryFlag: country.flagIcon });
+          setSignup({
+            countryId: country.id,
+            countryName: country.name,
+            countryCode: normalizePhoneCode(country.phone_code),
+            countryFlag: countryFlagFromIso(country.iso_code),
+            countryIsoCode: country.iso_code,
+            currencyCode: country.currency_code ?? '',
+          });
           setCountryModalOpen(false);
         }}
       />

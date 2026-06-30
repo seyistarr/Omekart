@@ -3,6 +3,28 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+  const isRootRoute = pathname === '/'
+  const isAuthRoute =
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/signup') ||
+    pathname.startsWith('/forgot-password')
+  const isCallbackRoute = pathname.startsWith('/auth/callback')
+  const isOnboardingRoute = pathname.startsWith('/onboarding')
+  const isPublicAsset =
+    pathname === '/manifest.webmanifest' ||
+    pathname === '/favicon.ico' ||
+    pathname.startsWith('/images/') ||
+    pathname.startsWith('/_next/')
+
+  if (isRootRoute) {
+    return NextResponse.redirect(new URL('/onboarding', request.url))
+  }
+
+  if (isPublicAsset || isAuthRoute || isCallbackRoute || isOnboardingRoute) {
+    return NextResponse.next()
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -35,52 +57,29 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
 
-  // Define route types
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/login') ||
-                      request.nextUrl.pathname.startsWith('/signup')
-  const isCallbackRoute = request.nextUrl.pathname.startsWith('/auth/callback')
-  const isOnboardingRoute = request.nextUrl.pathname.startsWith('/onboarding')
-  const isProtected = !isAuthRoute && !isCallbackRoute && !isOnboardingRoute
-
-  // If not authenticated and trying to access protected route → redirect to login
-  if (!session && isProtected) {
+  if (!session) {
     const redirectUrl = new URL('/login', request.url)
-    redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
+    redirectUrl.searchParams.set('redirectTo', pathname)
     return NextResponse.redirect(redirectUrl)
   }
 
-  // If authenticated and trying to access login/signup → redirect to home
-  if (session && isAuthRoute) {
-    return NextResponse.redirect(new URL('/home', request.url))
-  }
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('onboarding_completed')
+    .eq('user_id', session.user.id)
+    .maybeSingle()
 
-  // ---- ONBOARDING ENFORCEMENT ----
-  if (session) {
-    // Check if user has completed onboarding
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('onboarding_completed')
-      .eq('user_id', session.user.id)
-      .maybeSingle()
-
-    const hasCompletedOnboarding = profile?.onboarding_completed === true
-
-    // If not on onboarding or callback, and onboarding is incomplete → redirect
-    if (!isOnboardingRoute && !isCallbackRoute && !isAuthRoute && !hasCompletedOnboarding) {
-      return NextResponse.redirect(new URL('/onboarding', request.url))
-    }
-
-    // If on onboarding route and already completed → redirect to home
-    if (isOnboardingRoute && hasCompletedOnboarding) {
-      return NextResponse.redirect(new URL('/home', request.url))
-    }
+  if (profile?.onboarding_completed !== true) {
+    return NextResponse.redirect(new URL('/onboarding', request.url))
   }
 
   return response
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|public).*)']
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|manifest.webmanifest|public).*)'],
 }

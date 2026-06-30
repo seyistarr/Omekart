@@ -26,8 +26,12 @@ export type OnboardingStep =
 
 export interface SignupFormState {
   fullName: string;
+  countryId: string;
+  countryName: string;
   countryCode: string;
   countryFlag: string;
+  countryIsoCode: string;
+  currencyCode: string;
   phoneBody: string;
   email: string;
   password: string;
@@ -41,8 +45,12 @@ export interface LoginFormState {
 }
 
 export interface AddressState {
+  countryId: string;
   street: string;
   city: string;
+  cityId: string;
+  regionId: string;
+  region: string;
   country: string;
   lat: number | null;
   lng: number | null;
@@ -73,8 +81,12 @@ interface OnboardingContextValue extends OnboardingState {
 
 const defaultSignup: SignupFormState = {
   fullName: '',
-  countryCode: '+234',
-  countryFlag: '🇳🇬',
+  countryId: '',
+  countryName: '',
+  countryCode: '',
+  countryFlag: '',
+  countryIsoCode: '',
+  currencyCode: '',
   phoneBody: '',
   email: '',
   password: '',
@@ -88,9 +100,13 @@ const defaultLogin: LoginFormState = {
 };
 
 const defaultAddress: AddressState = {
+  countryId: '',
   street: '',
   city: '',
-  country: 'Nigeria',
+  cityId: '',
+  regionId: '',
+  region: '',
+  country: '',
   lat: null,
   lng: null,
 };

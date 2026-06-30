@@ -128,7 +128,7 @@ export default function LocationDetectionScreen() {
 
   function handleConfirm() {
     if (!resolvedAddress) return;
-    const cityPart = resolvedAddress.label.split(',').pop()?.trim() || 'Lagos';
+    const cityPart = resolvedAddress.label.split(',').pop()?.trim() || '';
     setAddress({
       street: resolvedAddress.label,
       city: cityPart,

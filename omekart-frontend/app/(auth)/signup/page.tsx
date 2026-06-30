@@ -1,11 +1,5 @@
-'use client';
+import { redirect } from 'next/navigation'
 
-import { useEffect } from 'react';
-
-export default function Page() {
-  useEffect(() => {
-    window.location.replace('/onboarding');
-  }, []);
-
-  return null;
+export default function SignupPage() {
+  redirect('/onboarding')
 }

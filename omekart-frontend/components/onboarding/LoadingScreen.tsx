@@ -24,7 +24,8 @@ export default function LoadingScreen() {
 
       const { error } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          user_id: userId,
           display_name: signup.fullName,
           phone: phone,
           avatar_url: avatarUrl,
@@ -32,18 +33,19 @@ export default function LoadingScreen() {
           default_lat: address.lat,
           default_lng: address.lng,
           onboarding_completed: true,
+        }, {
+          onConflict: 'user_id',
         })
-        .eq('user_id', userId);
 
       if (error) {
-        console.error('Failed to update profile:', error);
+        console.error('Failed to save profile:', error);
         // Continue to dashboard anyway
       }
 
       setSaving(false);
       // Redirect after a short delay
       setTimeout(() => {
-        router.push('/dashboard');
+        router.push('/dashboard/buyer');
       }, 800);
     };
 
